@@ -4,16 +4,7 @@ export type PageSize = "1440" | "1280" | "720" | "4k" | "custom";
 export type Orientation = "landscape" | "portrait";
 export type PageColor = "white" | "cream" | "sepia" | "lightblue" | "mint" | "dark" | "custom";
 export type LineType = "horizontal" | "vertical";
-export type DrawMode = "select" | "eraser" | "horizontal-line" | "vertical-line";
-
-export interface Line {
-    id: string;
-    type: LineType;
-    x?: number; // percentage or exact pixels
-    y?: number;
-    color: string;
-    thickness: number;
-}
+export type DrawMode = "select";
 
 export interface TraceCell {
     row: number;
@@ -48,11 +39,12 @@ export interface CanvasState {
     gridColor: string;
     manualGridData: Record<string, string>;
 
-    lines: Line[];
-    traceData: TraceCell[];
+    // Trace Styling
+    traceColor: string;
+    traceOpacity: number;
 
+    traceData: TraceCell[];
     drawMode: DrawMode;
-    lineColor: string;
 
     // Actions
     setPageSize: (size: PageSize) => void;
@@ -82,13 +74,10 @@ export interface CanvasState {
     setManualGridData: (data: Record<string, string>) => void;
     updateManualGridCell: (r: number, c: number, val: string) => void;
 
+    setTraceColor: (color: string) => void;
+    setTraceOpacity: (opacity: number) => void;
+
     setDrawMode: (mode: DrawMode) => void;
-    setLineColor: (color: string) => void;
-
-    addLine: (line: Omit<Line, "id">) => void;
-    updateLine: (id: string, updates: Partial<Line>) => void;
-    removeLine: (id: string) => void;
-
     setTraceData: (data: TraceCell[]) => void;
     clearLinesAndTrace: () => void;
 }
@@ -120,11 +109,11 @@ export const useCanvasStore = create<CanvasState>((set) => ({
     gridColor: "#000000",
     manualGridData: {},
 
-    lines: [],
+    traceColor: "#000000",
+    traceOpacity: 0.6,
     traceData: [],
 
     drawMode: "select",
-    lineColor: "#000000",
 
     setPageSize: (size) => set({ pageSize: size }),
     setCustomResolution: (width, height) => set({ customResolution: { width, height } }),
@@ -155,19 +144,10 @@ export const useCanvasStore = create<CanvasState>((set) => ({
         manualGridData: { ...state.manualGridData, [`${r},${c}`]: val }
     })),
 
+    setTraceColor: (color) => set({ traceColor: color }),
+    setTraceOpacity: (opacity) => set({ traceOpacity: opacity }),
+
     setDrawMode: (mode) => set({ drawMode: mode }),
-    setLineColor: (color) => set({ lineColor: color }),
-
-    addLine: (line) => set((state) => ({
-        lines: [...state.lines, { ...line, id: crypto.randomUUID() }]
-    })),
-    updateLine: (id, updates) => set((state) => ({
-        lines: state.lines.map((l) => l.id === id ? { ...l, ...updates } : l)
-    })),
-    removeLine: (id) => set((state) => ({
-        lines: state.lines.filter((l) => l.id !== id)
-    })),
-
     setTraceData: (data) => set({ traceData: data }),
-    clearLinesAndTrace: () => set({ lines: [], traceData: [] })
+    clearLinesAndTrace: () => set({ traceData: [] })
 }));
